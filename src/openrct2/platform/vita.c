@@ -182,7 +182,14 @@ bool platform_file_copy(const utf8 *srcPath, const utf8 *dstPath, bool overwrite
 
 time_t platform_file_get_modified_time(const utf8 *path)
 {
-	// stat file here
+	static time_t ret;
+	SceIoStat stat;
+
+	if (sceIoGetStat(path, &stat) < 0)
+		return 0;
+
+	sceRtcGetTime_t(&stat, &ret);
+	return &ret;
 }
 
 bool platform_original_game_data_exists(const utf8 *path)
@@ -221,8 +228,7 @@ bool platform_file_exists(const utf8 *path)
 
 sint32 platform_enumerate_directories_begin(const utf8 *directory)
 {
-	SceUID uid = sceIoDopen(directory);
-	return (sint32)uid;
+
 }
 
 bool platform_enumerate_directories_next(sint32 handle, utf8 *path)

@@ -28,6 +28,7 @@
 #include <psp2/io/fcntl.h>
 #include <psp2/io/stat.h>
 #include <psp2/kernel/threadmgr.h>
+#include <psp2/rtc.h>
 
 // TODO: make this configurable?
 #define VITA_DATA_DIR "ux0:/data/openrct2/"
@@ -48,27 +49,77 @@ static enumerate_file_info _enumerateFileIntoList[8] = {0};
 
 void platform_get_date_utc(rct2_date *out_date)
 {
+	if (out_date == NULL)
+		return;
 
+	SceDateTime dt;
+
+	if (sceRtcGetCurrentClock(&dt, 0) < 0)
+		return;
+
+	out_date->day = dt.day;
+	out_date->month = dt.month;
+	out_date->year = dt.year;
+	out_date->day_of_week = sceRtcGetDayOfWeek(dt.year, dt.month, dt.day);
 }
 
 void platform_get_time_utc(rct2_time *out_time)
 {
+	if (out_time == NULL)
+		return;
 
+	SceDateTime dt;
+
+	if (sceRtcGetCurrentClock(&dt, 0) < 0)
+		return;
+
+	out_time->hour = dt.hour;
+	out_time->minute = dt.minute;
+	out_time->second = dt.second;
 }
 
 void platform_get_date_local(rct2_date *out_date)
 {
+	if (out_date == NULL)
+		return;
 
+	SceDateTime dt;
+
+	if (sceRtcGetCurrentClockLocalTime(&dt) < 0)
+		return;
+
+	out_date->day = dt.day;
+	out_date->month = dt.month;
+	out_date->year = dt.year;
+	out_date->day_of_week = sceRtcGetDayOfWeek(dt.year, dt.month, dt.day);
 }
 
 void platform_get_time_local(rct2_time *out_time)
 {
+	if (out_time == NULL)
+		return;
 
+	SceDateTime dt;
+
+	if (sceRtcGetCurrentClockLocalTime(&dt) < 0)
+		return;
+
+	out_time->hour = dt.hour;
+	out_time->minute = dt.minute;
+	out_time->second = dt.second;
 }
 
 datetime64 platform_get_datetime_now_utc()
 {
+	SceDateTime dt;
+	SceUInt64 datetime;
 
+	if (sceRtcGetCurrentClock(&dt, 0) < 0)
+		return 0;
+
+	sceRtcGetTime64_t(&dt, &datetime);
+
+	return datetime;
 }
 
 sint32 platform_get_drives()
@@ -185,11 +236,11 @@ time_t platform_file_get_modified_time(const utf8 *path)
 	static time_t ret;
 	SceIoStat stat;
 
-	if (sceIoGetStat(path, &stat) < 0)
+	if (sceIoGetstat(path, &stat) < 0)
 		return 0;
 
-	sceRtcGetTime_t(&stat, &ret);
-	return &ret;
+	sceRtcGetTime_t(&stat.st_mtime, &ret);
+	return ret;
 }
 
 bool platform_original_game_data_exists(const utf8 *path)

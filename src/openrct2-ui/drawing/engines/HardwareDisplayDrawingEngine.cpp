@@ -171,7 +171,7 @@ private:
     {
         void *  pixels;
         sint32     pitch;
-        if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0)
+        if (SDL_LockTexture(texture, nullptr, &pixels, (int*)&pitch) == 0)
         {
             sint32 padding = pitch - (width * 4);
             if (pitch == width * 4)

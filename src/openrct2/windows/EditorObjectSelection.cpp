@@ -375,7 +375,7 @@ static void visible_list_refresh(rct_window *w)
             window_invalidate(w);
             return;
         }
-        qsort(_listItems, _numListItems, sizeof(list_item), sortFunc);
+        qsort(_listItems, _numListItems, sizeof(list_item), (int)sortFunc);
 
         if (_listSortDescending) {
             for (sint32 i = 0; i < _numListItems / 2; i++) {

@@ -4,7 +4,24 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif()
 
-project(openrct2)
+project(OpenRCT2)
+
+option(VITA_BUILD "Build for PS Vita")
+
+if (VITA_BUILD)
+    if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+      if (DEFINED ENV{VITASDK})
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
+      else()
+        message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
+      endif()
+    endif()
+
+    set(SHORT_NAME openrct2)
+
+
+    include("${VITASDK}/share/vita.cmake" REQUIRED)
+endif()
 
 include(FindPkgConfig)
 include(CheckCCompilerFlag)
@@ -14,6 +31,8 @@ include(GNUInstallDirs)
 set(ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}")
 set(CMAKE_MACOSX_RPATH 1)
 
+set(ENV{PKG_CONFIG_EXECUTABLE} "/usr/bin/pkg-config")
+
 set(TITLE_SEQUENCE_URL  "https://github.com/OpenRCT2/title-sequences/releases/download/v0.1.0/title-sequence-v0.1.0.zip")
 set(TITLE_SEQUENCE_SHA1 "b587d83de508d0b104d14c599b76f8565900fce0")
 
@@ -21,6 +40,11 @@ option(FORCE32 "Force 32-bit build. It will add `-m32` to compiler flags.")
 option(WITH_TESTS "Build tests")
 option(PORTABLE "Create a portable build (-rpath=$ORIGIN)" OFF)
 option(DOWNLOAD_TITLE_SEQUENCES "Download title sequences during installation." ON)
+
+
+if (VITA_BUILD)
+	set(WITH_TESTS OFF)
+endif()
 
 # Define current git branch
 execute_process(
@@ -75,7 +99,12 @@ function (ADD_CHECK_CXX_COMPILER_FLAG _CXXFLAGS _CACHE_VAR _FLAG)
 endfunction ()
 
 # Launchpad turns on -Wdate-time for compilers that support it, this shouldn't break our build
-ADD_CHECK_C_COMPILER_FLAG(CMAKE_C_FLAGS C_WARN_WRITE_STRINGS -Wno-error=date-time)
+if (VITA_BUILD)
+    ADD_CHECK_C_COMPILER_FLAG(CMAKE_C_FLAGS C_WARN_WRITE_STRINGS -Wno-error=date-time -O3 -Wno-unused-variable -Wno-unused-but-set-variable -fno-lto -fpermissive)
+    ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WARN_WRITE_STRINGS -fpermissive)
+else ()
+    ADD_CHECK_C_COMPILER_FLAG(CMAKE_C_FLAGS C_WARN_WRITE_STRINGS -Wno-error=date-time)
+endif ()
 ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WARN_WRITE_STRINGS -Wno-error=date-time)
 ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WARN_NULL_DEREFERENCE -Wnull-dereference)
 ADD_CHECK_CXX_COMPILER_FLAG(CMAKE_CXX_FLAGS CXX_WARN_SUGGEST_FINAL_TYPES -Wsuggest-final-types)
@@ -142,13 +171,17 @@ if (WIN32)
                                   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 else ()
     if (PORTABLE)
-        install(TARGETS "libopenrct2" LIBRARY DESTINATION "${CMAKE_INSTALL_BINDIR}"
-                                      ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+        if (VITA_BUILD)
+            install(TARGETS "libopenrct2" ARCHIVE DESTINATION "${CMAKE_INSTALL_BINDIR}")
+        else ()
+            install(TARGETS "libopenrct2" LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+        endif ()
     else ()
         install(TARGETS "libopenrct2" LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
                                       ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
     endif ()
 endif ()
+
 install(TARGETS "openrct2" RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 install(TARGETS "openrct2-cli" OPTIONAL RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/g2.dat" DESTINATION "${CMAKE_INSTALL_DATADIR}/openrct2")
@@ -166,3 +199,17 @@ install(FILES "distribution/linux/openrct2-savegame.desktop" DESTINATION "${CMAK
 install(FILES "distribution/linux/openrct2-scenario.desktop" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/applications")
 install(FILES "distribution/linux/openrct2-mimeinfo.xml" DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/mime/packages/" RENAME "openrct2.xml")
 install(DIRECTORY "distribution/man/" DESTINATION "${CMAKE_INSTALL_MANDIR}/man6" FILES_MATCHING PATTERN "*.6")
+
+if (VITA_BUILD)
+    set(VITA_APP_NAME, ${PROJECT})
+    set(VITA_TITLEID "ANGU00002")
+#    set(VITA_VERSION "01.00")
+    set(VITA_MKSFOEX_FLAGS "${VITA_MKSFOEX_FLAGS} -d PARENTAL_LEVEL=1")
+
+    vita_create_self(${SHORT_NAME}.self ${SHORT_NAME})
+
+    vita_create_vpk(${SHORT_NAME}.vpk ${VITA_TITLEID} ${SHORT_NAME}.self
+        VERSION ${VITA_VERSION}
+        NAME ${VITA_APP_NAME}
+    )
+endif()

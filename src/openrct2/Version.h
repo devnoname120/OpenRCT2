@@ -64,6 +64,9 @@
 #ifdef __OpenBSD__
     #define OPENRCT2_PLATFORM       "OpenBSD"
 #endif
+#ifdef __vita__
+    #define OPENRCT2_PLATFORM	    "PS Vita"
+#endif
 #ifndef OPENRCT2_PLATFORM
     #error Unknown platform!
 #endif

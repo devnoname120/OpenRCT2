@@ -45,6 +45,8 @@ typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
+
+
 #include "diagnostic.h"
 
 typedef char utf8;
@@ -115,7 +117,7 @@ typedef uint8 colour_t;
 // Gets the name of a symbol as a C string
 #define nameof(symbol) #symbol
 
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__)) || defined(__vita__)
 #include <unistd.h>
 #define STUB() log_warning("Function %s at %s:%d is a stub.\n", __PRETTY_FUNCTION__, __FILE__, __LINE__)
 #define _strcmpi _stricmp
@@ -136,7 +138,9 @@ typedef uint8 colour_t;
 #endif // defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 
 #if !((defined (_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200809L) || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 700))
+#if !(defined (__vita__))
 char *strndup(const char *src, size_t size);
+#endif
 #endif // !(POSIX_C_SOURCE >= 200809L || _XOPEN_SOURCE >= 700)
 
 // BSD and macOS have MAP_ANON instead of MAP_ANONYMOUS

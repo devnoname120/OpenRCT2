@@ -14,7 +14,9 @@
  *****************************************************************************/
 #pragma endregion
 
-#ifndef _WIN32
+#ifdef __vita__
+    #include <psp2/io/dirent.h>
+#elif !(defined(_WIN32))
     #include <dirent.h>
 #endif
 
@@ -195,6 +197,9 @@ namespace Path
             Memory::Free(absolutePath);
             return buffer;
         }
+#elif defined(__vita__)
+        String::Set(buffer, bufferSize, relativePath);
+        return buffer;
 #else
         utf8 * absolutePath = realpath(relativePath, nullptr);
         if (absolutePath == nullptr)
@@ -233,7 +238,7 @@ namespace Path
             // for now. We can properly resolve the casing if we ever need to.
             result = path;
         }
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__vita__)
         else
         {
             std::string fileName = Path::GetFileName(path);

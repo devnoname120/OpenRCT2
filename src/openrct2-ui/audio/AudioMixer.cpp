@@ -114,7 +114,11 @@ namespace OpenRCT2 { namespace Audio
             want.format = AUDIO_S16SYS;
             want.channels = 2;
             want.samples = 1024;
+#ifdef __vita__
+            want.callback = [](void * arg, uint8 * dst, int length) -> void
+#else
             want.callback = [](void * arg, uint8 * dst, sint32 length) -> void
+#endif
             {
                 auto mixer = static_cast<AudioMixerImpl *>(arg);
                 mixer->GetNextAudioChunk(dst, (size_t)length);

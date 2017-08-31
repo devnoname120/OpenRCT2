@@ -65,7 +65,11 @@ static void vehicle_update_crash(rct_vehicle *vehicle);
 static void vehicle_update_travelling_boat(rct_vehicle* vehicle);
 static void vehicle_update_motion_boat_hire(rct_vehicle *vehicle);
 static void vehicle_update_boat_location(rct_vehicle *vehicle);
+#ifdef __vita__
+static bool vehicle_is_boat_on_water(rct_vehicle *vehicle, sint32 x, sint32 y);
+#else
 static bool vehicle_is_boat_on_water(rct_vehicle *vehicle, int x, int y);
+#endif
 static void vehicle_update_arriving(rct_vehicle* vehicle);
 static void vehicle_update_unloading_passengers(rct_vehicle* vehicle);
 static void vehicle_update_waiting_for_cable_lift(rct_vehicle *vehicle);

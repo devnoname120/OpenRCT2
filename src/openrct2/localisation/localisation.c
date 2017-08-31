@@ -23,7 +23,8 @@
 #elif defined(__ANDROID__)
 #include <jni.h>
 #include <SDL.h>
-
+#elif __vita__
+// vita doesn't do iconv
 #else
 #include <iconv.h>
 #include <errno.h>
@@ -1367,6 +1368,10 @@ sint32 win1252_to_utf8(utf8string dst, const char *src, size_t srcLength, size_t
     (*env)->DeleteLocalRef(env, bytes);
     (*env)->DeleteLocalRef(env, jstring1);
 
+    int result = strlen(dst) + 1;
+#elif defined(__vita__)
+    char *outBuf = dst;
+    snprintf(dst, maxBufferLength, "%s", src);
     int result = strlen(dst) + 1;
 #else
     //log_warning("converting %s of size %d", src, srcLength);

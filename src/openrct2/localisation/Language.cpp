@@ -162,7 +162,7 @@ static utf8 * convert_multibyte_charset(const char * src, size_t srcMaxSize, sin
                     wchar_t codepoint16 = (wchar_t)((a << 8) | b);
 
                     codepoint16 = convert_specific_language_character_to_unicode(languageId, codepoint16);
-                    sb.Append(codepoint16);
+                    sb.Append((sint32)codepoint16);
                 }
             }
         }

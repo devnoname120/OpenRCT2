@@ -4,6 +4,16 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif ()
 
+if( NOT DEFINED CMAKE_TOOLCHAIN_FILE )
+  if( DEFINED ENV{VITASDK} )
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
+  else()
+    message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
+  endif()
+endif()
+
+include("${VITASDK}/share/vita.cmake" REQUIRED)
+
 # Options
 option(STATIC "Create a static build.")
 option(USE_MMAP "Use mmap to try loading rct2's data segment into memory.")
@@ -13,6 +23,15 @@ option(DISABLE_HTTP_TWITCH "Disable HTTP and Twitch support.")
 option(DISABLE_NETWORK "Disable multiplayer functionality. Mainly for testing.")
 option(DISABLE_TTF "Disable support for TTF provided by freetype2.")
 option(ENABLE_LIGHTFX "Enable lighting effects." ON)
+
+if (VITA)
+	set(STATIC ON)
+	set(DISABLE_HTTP_TWITCH ON)
+	set(DISABLE_NETWORK ON)
+	set(DISABLE_TTF ON)
+	set(DISABLE_OPENGL ON)
+	set(ENABLE_LIGHTFX OFF)
+endif ()
 
 if (NOT DISABLE_RCT2)
     if (WIN32)
@@ -26,6 +45,12 @@ endif ()
 # Needed for linking with non-broken OpenSSL on Apple platforms
 if (APPLE)
     set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:/usr/local/opt/openssl/lib/pkgconfig")
+endif ()
+if (VITA)
+    set(ENV{PKG_CONFIG_EXECUTABLE} "/usr/bin/pkg-config")
+    set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:$ENV{VITASDK}/arm-vita-eabi/lib/pkgconfig")
+    message(WARNING "$ENV{PKG_CONFIG_PATH}")
+    #set(ENV{PKG_CONFIG_PATH}
 endif ()
 
 # Third party libraries
@@ -142,6 +167,10 @@ if (NOT DISABLE_RCT2)
     endif ()
 endif ()
 
+if (VITA)
+    target_link_libraries(${PROJECT} c)
+endif ()
+
 # Libraries
 if (STATIC)
     target_link_libraries(${PROJECT} ${JANSSON_STATIC_LIBRARIES}
@@ -193,13 +222,16 @@ if (NOT DISABLE_TTF)
     endif ()
 endif ()
 
+# Vita doesn't have an iconv
+if (NOT VITA)
 if (APPLE OR STATIC OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
     find_library(ICONV_LIBRARIES NAMES iconv libiconv libiconv-2 c)
     target_link_libraries(${PROJECT} ${ICONV_LIBRARIES})
 endif()
+endif()
 
 # Includes
-target_include_directories(${PROJECT} SYSTEM PRIVATE ${LIBZIP_INCLUDE_DIRS})
+target_include_directories(${PROJECT} PRIVATE ${LIBZIP_INCLUDE_DIRS})
 target_include_directories(${PROJECT} PRIVATE ${JANSSON_INCLUDE_DIRS}
                                               ${PNG_INCLUDE_DIRS}
                                               ${ZLIB_INCLUDE_DIRS})
@@ -222,27 +254,36 @@ endif()
 
 # Compiler flags
 set(DEBUG_LEVEL 0 CACHE STRING "Select debug level for compilation. Use value in range 0–3.")
-set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -fstrict-aliasing -Werror -Wundef -Wmissing-declarations -Winit-self -Wall -Wno-unknown-pragmas -Wno-unused-function -Wno-missing-braces ")
-set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -Wno-comment -Wshadow  -Wmissing-declarations -Wnonnull")
+#set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -fstrict-aliasing -Werror -Wundef -Wmissing-declarations -Winit-self -Wno-unknown-pragmas -Wno-unused-function -Wno-missing-braces ")
+set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -fstrict-aliasing")
+#set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -Wno-comment -Wshadow  -Wmissing-declarations -Wnonnull")
 set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -DDEBUG=${DEBUG_LEVEL}")
 
+set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} ")
 # On mingw all code is already PIC, this will avoid compiler error on redefining this option
-if (NOT MINGW)
+# We need to not use PIC on vita, doesn't support R_ARM_BASE_PREL
+if (NOT MINGW AND NOT VITA)
+    # VITA, temporary
     set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -fPIC")
 endif ()
+
+if (VITA)
+    set(COMMON_COMPILE_OPTIONS "${COMMON_COMPILE_OPTIONS} -fno-PIC")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
+endif()
 
 if (APPLE AND NOT USE_MMAP)
     set(PIE_FLAG "-fno-pie")
 else ()
-    set(PIE_FLAG "-fpie")
+    #set(PIE_FLAG "-fpie")
 endif ()
 
 if (FORCE32)
     set(TARGET_M "-m32")
 endif ()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 ${COMMON_COMPILE_OPTIONS} ${TARGET_M} -Wimplicit")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 ${COMMON_COMPILE_OPTIONS} ${TARGET_M}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 ${COMMON_COMPILE_OPTIONS} ${TARGET_M}") # -Wimplicit")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${VITASDK}/arm-vita-eabi/include/ -I${VITASDK}/arm-vita-eabi/include/SDL2/ -std=gnu++14 ${COMMON_COMPILE_OPTIONS} ${TARGET_M}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${TARGET_M}")
 
 # Defines

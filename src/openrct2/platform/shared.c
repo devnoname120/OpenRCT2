@@ -23,6 +23,10 @@
     #include <unistd.h>
 #endif
 
+#ifdef __vita__
+#include <psp2/rtc.h>
+#endif
+
 #include <stdlib.h>
 #include <time.h>
 #include "../config/Config.h"
@@ -165,6 +169,10 @@ uint32 platform_get_ticks()
     return (uint32)(runningDelta.QuadPart / _frequency);
 #elif defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 101200)
     return (uint32)(((mach_absolute_time() * _mach_base_info.numer) / _mach_base_info.denom) / 1000000);
+#elif defined(__vita__)
+    SceRtcTick tick;
+    sceRtcGetCurrentTick(&tick);
+    return (uint32)tick.tick;
 #else
     struct timespec ts;
     if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
@@ -175,6 +183,7 @@ uint32 platform_get_ticks()
 #endif
 }
 
+#ifndef __vita__
 void platform_sleep(uint32 ms)
 {
 #ifdef _WIN32
@@ -183,6 +192,7 @@ void platform_sleep(uint32 ms)
     usleep(ms * 1000);
 #endif
 }
+#endif
 
 uint8 platform_get_currency_value(const char *currCode) {
     if (currCode == NULL || strlen(currCode) < 3) {

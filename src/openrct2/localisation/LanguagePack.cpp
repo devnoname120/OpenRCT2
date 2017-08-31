@@ -453,7 +453,12 @@ public:
 
             while (sb.GetLength() < 8)
             {
+// I can't remember why this is needed
+#ifdef __vita__
+                sb.Append(" ");
+#else
                 sb.Append(' ');
+#endif
             }
             if (sb.GetLength() == 8)
             {
@@ -615,7 +620,11 @@ public:
         }
 
         // Append a null terminator for the benefit of the last string
+#ifdef __vita__
+        _stringDataSB.Append("\0");
+#else
         _stringDataSB.Append('\0');
+#endif
 
         // Get the relative offset to the string (add the base offset when we extract the string properly)
         utf8 * relativeOffset = (utf8*)_stringDataSB.GetLength();

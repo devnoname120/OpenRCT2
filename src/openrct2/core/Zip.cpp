@@ -35,7 +35,11 @@ public:
             zipOpenMode = ZIP_CREATE;
         }
 
+#ifdef __vita__
+	int error;
+#else
         sint32 error;
+#endif
         _zip = zip_open(path, zipOpenMode, &error);
         if (_zip == nullptr)
         {

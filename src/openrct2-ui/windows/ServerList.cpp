@@ -615,7 +615,7 @@ static void sort_servers()
     if (_serverEntries == nullptr) {
         return;
     }
-    qsort(_serverEntries, _numServerEntries, sizeof(server_entry), server_compare);
+    qsort(_serverEntries, _numServerEntries, sizeof(server_entry), (__compar_fn_t)server_compare);
 }
 
 static char *substr(char *start, sint32 length)

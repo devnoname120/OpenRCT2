@@ -8,6 +8,16 @@ if (PORTABLE)
     set(CMAKE_INSTALL_RPATH "$ORIGIN")
 endif ()
 
+if( NOT DEFINED CMAKE_TOOLCHAIN_FILE )
+  if( DEFINED ENV{VITASDK} )
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
+  else()
+    message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
+  endif()
+endif()
+
+include("${VITASDK}/share/vita.cmake" REQUIRED)
+
 # Sources
 file(GLOB_RECURSE OPENRCT2_CLI_SOURCES
     "${CMAKE_CURRENT_LIST_DIR}/*.c"
@@ -20,7 +30,10 @@ set (PROJECT openrct2-cli)
 project(${PROJECT})
 add_executable(${PROJECT} EXCLUDE_FROM_ALL ${OPENRCT2_CLI_SOURCES})
 
-target_link_libraries(${PROJECT} "libopenrct2")
+target_link_libraries(${PROJECT} 
+	libopenrct2
+	zip
+)
 
 # Includes
 target_include_directories(${PROJECT} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/..")

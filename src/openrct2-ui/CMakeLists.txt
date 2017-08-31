@@ -4,6 +4,16 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif ()
 
+if( NOT DEFINED CMAKE_TOOLCHAIN_FILE )
+  if( DEFINED ENV{VITASDK} )
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VITASDK}/share/vita.toolchain.cmake" CACHE PATH "toolchain file")
+  else()
+    message(FATAL_ERROR "Please define VITASDK to point to your SDK path!")
+  endif()
+endif()
+
+include("${VITASDK}/share/vita.cmake" REQUIRED)
+
 # Options
 option(DISABLE_OPENGL "Disable OpenGL support.")
 
@@ -61,10 +71,32 @@ if (NOT DISABLE_OPENGL)
     endif ()
 endif ()
 
+target_link_libraries(${PROJECT}
+	vita2d
+	stdc++
+	c
+	z
+	m
+	zip
+	SceAudio_stub
+	SceAudiodec_stub
+	SceCommonDialog_stub
+	SceCtrl_stub
+	SceDisplay_stub
+	SceGxm_stub
+	SceIme_stub
+	SceSysmodule_stub
+	SceTouch_stub
+)
+
 # Includes
 target_include_directories(${PROJECT} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/.."
                                               ${SPEEX_INCLUDE_DIRS})
-target_include_directories(${PROJECT} SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
+if (VITA)
+    target_include_directories(${PROJECT} PRIVATE ${SDL2_INCLUDE_DIRS})
+else()
+    target_include_directories(${PROJECT} SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
+endif()
 
 # Compiler flags
 if (FORCE32)
@@ -78,7 +110,7 @@ endif ()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 ${TARGET_M}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14 ${TARGET_M}")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${TARGET_M}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lvita2d ${TARGET_M}")
 
 # Defines
 if (DISABLE_OPENGL)

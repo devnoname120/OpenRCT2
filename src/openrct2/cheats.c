@@ -759,7 +759,11 @@ const char* cheats_get_cheat_string(int cheat, int edx, int edi) {
             safe_strcat(cheat_string, " ", 64);
 
             char buffer[8];
+#ifdef __vita__
+	    snprintf(buffer, sizeof(buffer), "%ld", park_rating_spinner_value);
+#else
             snprintf(buffer, sizeof(buffer), "%d", park_rating_spinner_value);
+#endif
             char* park_rating = buffer;
             safe_strcat(cheat_string, park_rating, 64);
 

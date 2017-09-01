@@ -28,7 +28,7 @@ if (NOT DISABLE_OPENGL)
     # GL doesn't work nicely with macOS, while find_package doesn't work with multiarch on Ubuntu.
     if (APPLE)
         find_package(OpenGL REQUIRED)
-    elseif (NOT WIN32)
+    elseif (NOT WIN32 AND NOT VITA)
         PKG_CHECK_MODULES(GL REQUIRED gl)
     endif ()
 endif ()
@@ -87,6 +87,7 @@ target_link_libraries(${PROJECT}
 	SceIme_stub
 	SceSysmodule_stub
 	SceTouch_stub
+	SceNetCtl_stub
 )
 
 # Includes

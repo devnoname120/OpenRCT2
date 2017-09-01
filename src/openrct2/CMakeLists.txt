@@ -47,10 +47,8 @@ if (APPLE)
     set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:/usr/local/opt/openssl/lib/pkgconfig")
 endif ()
 if (VITA)
-    set(ENV{PKG_CONFIG_EXECUTABLE} "/usr/bin/pkg-config")
+    set(PKG_CONFIG_EXECUTABLE "/usr/bin/pkg-config")
     set(ENV{PKG_CONFIG_PATH} "$ENV{PKG_CONFIG_PATH}:$ENV{VITASDK}/arm-vita-eabi/lib/pkgconfig")
-    message(WARNING "$ENV{PKG_CONFIG_PATH}")
-    #set(ENV{PKG_CONFIG_PATH}
 endif ()
 
 # Third party libraries

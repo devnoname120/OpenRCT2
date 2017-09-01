@@ -4,7 +4,7 @@ if (CMAKE_BINARY_DIR STREQUAL CMAKE_SOURCE_DIR)
     message(FATAL_ERROR "Building in-source is not supported! Create a build dir and remove ${CMAKE_SOURCE_DIR}/CMakeCache.txt")
 endif()
 
-project(OpenRCT2)
+#project(OpenRCT2)
 
 option(VITA_BUILD "Build for PS Vita")
 
@@ -20,8 +20,10 @@ if (VITA_BUILD)
     set(SHORT_NAME openrct2)
 
 
-    include("${VITASDK}/share/vita.cmake" REQUIRED)
+    include("$ENV{VITASDK}/share/vita.cmake" REQUIRED)
 endif()
+
+project(openrct2)
 
 include(FindPkgConfig)
 include(CheckCCompilerFlag)
@@ -31,7 +33,7 @@ include(GNUInstallDirs)
 set(ROOT_DIR "${CMAKE_CURRENT_LIST_DIR}")
 set(CMAKE_MACOSX_RPATH 1)
 
-set(ENV{PKG_CONFIG_EXECUTABLE} "/usr/bin/pkg-config")
+set(PKG_CONFIG_EXECUTABLE "/usr/bin/pkg-config")
 
 set(TITLE_SEQUENCE_URL  "https://github.com/OpenRCT2/title-sequences/releases/download/v0.1.0/title-sequence-v0.1.0.zip")
 set(TITLE_SEQUENCE_SHA1 "b587d83de508d0b104d14c599b76f8565900fce0")

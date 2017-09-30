@@ -45,7 +45,7 @@ typedef struct {
 	SceUID handle;
 } enumerate_file_info;
 
-static enumerate_file_info _enumerateFileIntoList[8] = {0};
+static enumerate_file_info _enumerateFileInfoList[8] = {0};
 
 void platform_get_date_utc(rct2_date *out_date)
 {
@@ -196,7 +196,19 @@ int remove_path(const char *path)
 bool platform_ensure_directory_exists(const utf8 *path)
 {
 	// messy, should stat properly
-	return !(sceIoMkdir(path, 0777) != 0);
+	//debugNetPrintf(1, "%s: %s\n", __FUNCTION__, path);
+	int mkdir = sceIoMkdir(path, 0777);
+
+	bool ret;
+	// already exists
+	if (mkdir == 0x80010011)
+		ret = true;
+	else
+		ret = false;
+
+	//bool ret = mkdir >= 0;
+	//debugNetPrintf(1, "%s: %x, %d", __FUNCTION__, mkdir, ret);
+	return ret;
 }
 
 // What are we supposed to do about overwrites?
@@ -245,8 +257,16 @@ time_t platform_file_get_modified_time(const utf8 *path)
 
 bool platform_original_game_data_exists(const utf8 *path)
 {
+	// debugNetPrintf(1, "%s: %s\n", __FUNCTION__, path);
 	// always false on vita
-	return false;
+	// this doesn't mean the executable, it means thepp
+	// data files, I'm just stupid
+	char buffer[MAX_PATH];
+    char checkPath[MAX_PATH];
+    safe_strcpy(checkPath, path, MAX_PATH);
+    safe_strcat_path(checkPath, "Data", MAX_PATH);
+    safe_strcat_path(checkPath, "g1.dat", MAX_PATH);
+    return platform_file_exists(checkPath);
 }
 
 bool platform_directory_delete(const utf8 *path)
@@ -273,12 +293,51 @@ bool platform_directory_exists(const utf8 *path)
 bool platform_file_exists(const utf8 *path)
 {
 	SceIoStat stat;
+	int ret = sceIoGetstat(path, &stat);
+	// debugNetPrintf(1, "%s, %s, %d", __FUNCTION__, path, ret);
+	return ret >= 0;
+}
 
-	return sceIoGetstat(path, &stat) >= 0;
+sint32 list_dirs(const char *dir)
+{
+	// SceUID dir_uid = sceIoDopen(dir);
+	// int ret;
+	// SceIoDirent tmp;
+
+	// if (dfd < 0)
+	// 	return 0;
+
+	// do {
+	// 	ret = sceIoDread(dir_uid, &tmp);
+
+	// 	if (tmp.d_stat & S_IFDIR)
+	// 	{
+
+	// 	}
+
+
+	// } while (ret > 0);
+
 }
 
 sint32 platform_enumerate_directories_begin(const utf8 *directory)
 {
+
+	// sint32 cnt;
+
+	// enumerate_file_info *enum_file_info;
+
+	// sint32 length = strlen(directory);
+
+	// for (sint32 i = 0; i < countof(_enumerateFileInfoList); i++) {
+	// 	enum_file_info = _enumerateFileInfoList[i];
+
+	// 	if (!enumFileInfo->active)
+	// 	{
+	// 		safe_strcpy(enumFileInfo->pattern, directory, length);
+
+	// 	}
+	// }
 
 }
 
@@ -339,7 +398,7 @@ void platform_get_exe_path(utf8 *outPath, size_t outSize)
 
 void platform_get_user_directory(utf8 *outPath, const utf8 *subDirectory, size_t outSize)
 {
-
+	safe_strcpy(outPath, VITA_DATA_DIR, outSize);
 }
 
 void platform_posix_sub_user_data_path(char *buffer, size_t size, const char *homedir)
@@ -349,6 +408,7 @@ void platform_posix_sub_user_data_path(char *buffer, size_t size, const char *ho
 
 void platform_get_openrct_data_path(utf8 *outPath, size_t outSize)
 {
+	// debugNetPrintf(1, "%s, %s\n", __FUNCTION__, _openrctDataDirectoryPath);
 	safe_strcpy(outPath, _openrctDataDirectoryPath, outSize);
 }
 

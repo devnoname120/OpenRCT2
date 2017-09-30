@@ -28,9 +28,42 @@ extern "C"
     #include <openrct2/platform/platform.h>
 }
 
+#if defined(__vita__)
+#include <psp2/kernel/threadmgr.h>
+#endif
+
 using namespace OpenRCT2;
 using namespace OpenRCT2::Audio;
 using namespace OpenRCT2::Ui;
+
+#if defined(__vita__)
+
+extern "C"
+{
+    unsigned int sleep(unsigned int seconds)
+    {
+        sceKernelDelayThread(seconds*1000*1000);
+        return 0;
+    }
+
+    int usleep(useconds_t usec)
+    {
+        sceKernelDelayThread(usec);
+        return 0;
+    }
+
+    void __sinit(struct _reent *);
+}
+
+#endif
+
+
+__attribute__((constructor(101)))
+void pthread_setup(void)
+{
+    pthread_init();
+    __sinit(_REENT);
+}
 
 /**
  * Main entry point for non-Windows sytems. Windows instead uses its own DLL proxy.
@@ -42,6 +75,7 @@ int main(int argc, char * * argv)
 #endif
 {
     core_init();
+#if !defined(__vita__)
     int runGame = cmdline_run((const char * *)argv, argc);
     if (runGame == 1)
     {
@@ -54,19 +88,21 @@ int main(int argc, char * * argv)
         }
         else
         {
+#endif
             // Run OpenRCT2 with a UI context
             auto env = CreatePlatformEnvironment();
             auto audioContext = CreateAudioContext();
             auto uiContext = CreateUiContext(env);
             auto context = CreateContext(env, audioContext, uiContext);
-
             context->RunOpenRCT2(argc, argv);
 
             delete context;
             delete uiContext;
             delete audioContext;
+#if !defined(__vita__)
         }
     }
+#endif
     return gExitCode;
 }
 

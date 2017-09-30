@@ -281,7 +281,7 @@ if (FORCE32)
 endif ()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu11 ${COMMON_COMPILE_OPTIONS} ${TARGET_M}") # -Wimplicit")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${VITASDK}/arm-vita-eabi/include/ -I${VITASDK}/arm-vita-eabi/include/SDL2/ -std=gnu++14 ${COMMON_COMPILE_OPTIONS} ${TARGET_M}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -I${VITASDK}/arm-vita-eabi/include/ -I${VITASDK}/arm-vita-eabi/include/SDL2/ -std=gnu++14 ${COMMON_COMPILE_OPTIONS} ${TARGET_M}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${TARGET_M}")
 
 # Defines

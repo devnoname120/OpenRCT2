@@ -732,7 +732,12 @@ extern "C"
                     IUiContext * uiContext = GetContext()->GetUiContext();
                     uiContext->ShowMessageBox("OpenRCT2 needs files from the original RollerCoaster Tycoon 2 in order to work. Please select the directory where you installed RollerCoaster Tycoon 2.");
 
+                    #if defined(__vita__)
+                    // We'll work this out later. although SDL should be enabled at this point
+                    std::string installPath = "ux0:/data/openrct2";
+                    #else
                     std::string installPath = uiContext->ShowDirectoryDialog("Please select your RCT2 directory");
+                    #endif
                     if (installPath.empty())
                     {
                         return false;

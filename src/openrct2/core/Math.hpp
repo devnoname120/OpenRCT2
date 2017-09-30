@@ -28,18 +28,12 @@ namespace Math
     {
         return (std::min)(a, b);
     }
-    // vita has 16bit int, fucks up templates using sint32 for /some/ of
-    // the args, we'll just keep adding these until we find them all.pp
-    // nicer solution than fixing the code itself
+    // Add specific templates with casting for vita
 #ifdef __vita__
-    static long int Min(int a, long int b)
+    template<typename T, typename T2>
+    static T2 Min(T a, T2 b)
     {
-        return (std::min)((long int)a, b);
-    }
-
-    static long int Min(long int a, int b)
-    {
-        return (std::min)(a, (long int)b);
+        return (std::min)((T2)a, b);
     }
 #endif
 
@@ -49,15 +43,12 @@ namespace Math
         return (std::max)(a, b);
     }
 #ifdef __vita__
-    static long int Max(int a, long int b)
+    template<typename T, typename T2>
+    static T2 Max(T a, T2 b)
     {
-        return (std::max)((long int)a, b);
+        return (std::max)((T2)a, b);
     }
 
-    static long int Max(long int a, int b)
-    {
-        return (std::max)(a, (long int)b);
-    }
 #endif
 
     template<typename T>
@@ -66,6 +57,9 @@ namespace Math
         return (std::min)((std::max)(low, x), high);
     }
 
+    // leave these as non-templates, there's 5 possibilites if we
+    // want all templates, just leave it as the 3 that break compilation
+    // for now
 #ifdef __vita__
     static long int Clamp(int low, long int x, int high)
     {

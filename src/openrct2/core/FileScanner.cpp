@@ -31,6 +31,11 @@
         // Windows needs this for widechar <-> utf8 conversion utils
         #include "../localisation/language.h"
     }
+#elif defined(__vita__)
+    #include <sys/types.h>
+    #include <sys/stat.h>
+    #include <psp2/io/stat.h>
+    #include <psp2/io/dirent.h>
 #endif
 
 #include <stack>
@@ -137,7 +142,6 @@ public:
             _started = true;
             PushState(_rootPath);
         }
-
         while (_directoryStack.size() != 0)
         {
             DirectoryState * state = &_directoryStack.top();
@@ -288,6 +292,80 @@ private:
 
 #endif // _WIN32
 
+#if defined(__vita__)
+class FileScannerVita final : public FileScannerBase
+{
+public:
+    FileScannerVita(const std::string &pattern, bool recurse)
+        : FileScannerBase(pattern, recurse)
+    {
+
+    }
+
+protected:
+    void GetDirectoryChildren(std::vector<DirectoryChild> &children, const std::string &path) override
+    {
+        SceUID did;
+        struct SceIoDirent dirent;
+
+        did = sceIoDopen(path.c_str());
+        if (did < 0)
+        {
+            // can't stat directory
+            return;
+        }
+
+        while (sceIoDread(did, &dirent) > 0)
+        {
+            if (!String::Equals(dirent.d_name, ".") &&
+                !String::Equals(dirent.d_name, ".."))
+            {
+                DirectoryChild child = CreateChild(path.c_str(), &dirent);
+                children.push_back(child);
+            }
+        }
+
+        sceIoDclose(did);
+    }
+
+private:
+    static sint32 FilterFunc(const struct dirent *d)
+    {
+        return 1;
+    }
+
+    static DirectoryChild CreateChild(const utf8 * directory, const struct SceIoDirent * node)
+    {
+        DirectoryChild result;
+        result.Name = std::string(node->d_name);
+        if (SCE_S_ISDIR(node->d_stat.st_mode))
+        {
+            result.Type = DIRECTORY_CHILD_TYPE::DC_DIRECTORY;
+        }
+        else
+        {
+            result.Type = DIRECTORY_CHILD_TYPE::DC_FILE;
+
+            // Get the full path of the file
+            size_t pathSize = String::SizeOf(directory) + 1 + String::SizeOf(node->d_name) + 1;
+            utf8 * path = Memory::Allocate<utf8>(pathSize);
+            String::Set(path, pathSize, directory);
+            Path::Append(path, pathSize, node->d_name);
+
+            struct stat statInfo;
+            sint32 statRes = stat(path, &statInfo);
+            if (statRes != -1)
+            {
+                result.Size = statInfo.st_size;
+                result.LastModified = statInfo.st_mtime;
+            }
+
+            Memory::Free(path);
+        }
+        return result;
+    }
+};
+#endif
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 
 class FileScannerUnix final : public FileScannerBase
@@ -366,6 +444,8 @@ IFileScanner * Path::ScanDirectory(const std::string &pattern, bool recurse)
     return new FileScannerWindows(pattern, recurse);
 #elif defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
     return new FileScannerUnix(pattern, recurse);
+#elif defined(__vita__)
+    return new FileScannerVita(pattern, recurse);
 #endif
 }
 
@@ -376,7 +456,6 @@ void Path::QueryDirectory(QueryDirectoryResult * result, const std::string &patt
     {
         const FileInfo * fileInfo = scanner->GetFileInfo();
         const utf8 * path = scanner->GetPath();
-
         result->TotalFiles++;
         result->TotalFileSize += fileInfo->Size;
         result->FileDateModifiedChecksum ^=

@@ -116,14 +116,21 @@ public:
 
     void LoadOrConstruct() override
     {
+        debugNetPrintf(1, "Entering Load or construct [%s, %d]\n", __FILE__, __LINE__);
         ClearItems();
-
+        debugNetPrintf(1, "ClearItems()[%s, %d]\n", __FUNCTION__, __LINE__);
         Query();
+        debugNetPrintf(1, "Query()[%s, %d]\n", __FUNCTION__, __LINE__);
         if (!Load())
         {
+            debugNetPrintf(1, "No existing file%s, %d\n", __FUNCTION__, __LINE__);
             _languageId = gCurrentLanguage;
+            debugNetPrintf(1, "Starting scan...\n");
             Scan();
+            debugNetPrintf(1, "Done scan.\n");
+            debugNetPrintf(1, "Starting save.\n");
             Save();
+            debugNetPrintf(1, "Done save.\n");
         }
 
         // SortItems();
@@ -280,16 +287,22 @@ private:
 
         const std::string &rct2Path = _env->GetDirectoryPath(DIRBASE::RCT2, DIRID::OBJECT);
         const std::string &openrct2Path = _env->GetDirectoryPath(DIRBASE::USER, DIRID::OBJECT);
+        debugNetPrintf(1, "%s, %d, %s, %s\n", __FUNCTION__, __LINE__, rct2Path.c_str(), openrct2Path.c_str());
         QueryDirectory(&_queryDirectoryResult, rct2Path);
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
         QueryDirectory(&_queryDirectoryResult, openrct2Path);
     }
 
     void QueryDirectory(QueryDirectoryResult * result, const std::string &directory)
     {
         utf8 pattern[MAX_PATH];
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
         String::Set(pattern, sizeof(pattern), directory.c_str());
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
         Path::Append(pattern, sizeof(pattern), "*.dat");
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
         Path::QueryDirectory(result, pattern);
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
     }
 
     void Scan()
@@ -347,11 +360,16 @@ private:
 
     bool Load()
     {
+        debugNetPrintf(1, "Starting Load() [%s, %d]\n", __FUNCTION__, __LINE__);
         const std::string &path = _env->GetFilePath(PATHID::CACHE_OBJECTS);
+        debugNetPrintf(1, "Got path: %s, %d, %s\n", __FUNCTION__, __LINE__, path.c_str());
+
         try
         {
             auto fs = FileStream(path, FILE_MODE_OPEN);
+            debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
             auto header = fs.ReadValue<ObjectRepositoryHeader>();
+            debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
 
             if (header.Version == OBJECT_REPOSITORY_VERSION &&
                 header.LanguageId == gCurrentLanguage &&
@@ -361,11 +379,13 @@ private:
                 header.PathChecksum == _queryDirectoryResult.PathChecksum)
             {
                 // Header matches, so the index is not out of date
+                debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
 
                 // Buffer the rest of file into memory to speed up item reading
                 size_t dataSize = (size_t)(fs.GetLength() - fs.GetPosition());
                 void * data = fs.ReadArray<uint8>(dataSize);
                 auto ms = MemoryStream(data, dataSize, MEMORY_ACCESS::READ | MEMORY_ACCESS::OWNER);
+                debugNetPrintf(1, "%s, %d. Header items: %d\n", __FUNCTION__, __LINE__, header.NumItems);
 
                 // Read items
                 for (uint32 i = 0; i < header.NumItems; i++)
@@ -380,15 +400,19 @@ private:
         }
         catch (const IOException &)
         {
+            debugNetPrintf(1, "IOException Thrown %s, %d\n", __FUNCTION__, __LINE__);
             return false;
         }
     }
 
     void Save() const
     {
+        debugNetPrintf(1, "Entered save.\n");
         const std::string &path = _env->GetFilePath(PATHID::CACHE_OBJECTS);
+        debugNetPrintf(1, "Writepath: %s.\n", path.c_str());
         try
         {
+            debugNetPrintf(1, "%s, %s\n", __FUNCTION__, path.c_str());
             auto fs = FileStream(path, FILE_MODE_WRITE);
 
             // Write header
@@ -408,9 +432,13 @@ private:
                 WriteItem(&fs, _items[i]);
             }
         }
+        // this exception crashes
         catch (const IOException &)
         {
+
+            debugNetPrintf(1, "FileStream::Save exception\n");
             log_error("Unable to write object repository index to '%s'.", path.c_str());
+            exit(1);
         }
     }
 

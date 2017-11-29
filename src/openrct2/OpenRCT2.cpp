@@ -14,6 +14,8 @@
  *****************************************************************************/
 #pragma endregion
 
+#include <psp2/kernel/threadmgr.h>
+
 #include "core/Console.hpp"
 #include "core/File.h"
 #include "core/FileStream.hpp"

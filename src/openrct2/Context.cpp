@@ -261,7 +261,6 @@ namespace OpenRCT2
 #endif // DISABLE_NETWORK
 
             crash_init();
-
             if (!rct2_interop_setup_segment())
             {
                 log_fatal("Unable to load RCT2 data sector");
@@ -292,18 +291,20 @@ namespace OpenRCT2
                 }
             }
 
+            #ifdef __vita__
+            std::string rct2InstallPath = "ux0:/data/openrct2";
+            #else
             auto rct2InstallPath = GetOrPromptRCT2Path();
+            #endif
             if (rct2InstallPath.empty())
             {
                 return false;
             }
             _env->SetBasePath(DIRBASE::RCT2, rct2InstallPath);
-
             if (!gOpenRCT2Headless)
             {
                 _uiContext->CreateWindow();
             }
-
             // TODO add configuration option to allow multiple instances
             // if (!gOpenRCT2Headless && !platform_lock_single_instance()) {
             //  log_fatal("OpenRCT2 is already running.");
@@ -314,7 +315,6 @@ namespace OpenRCT2
             _objectManager = CreateObjectManager(_objectRepository);
             _trackDesignRepository = CreateTrackDesignRepository(_env);
             _scenarioRepository = CreateScenarioRepository(_env);
-
             if (!language_open(gConfigGeneral.language))
             {
                 log_error("Failed to open configured language...");
@@ -344,7 +344,6 @@ namespace OpenRCT2
                 audio_populate_devices();
                 audio_init_ride_sounds_and_info();
             }
-
             http_init();
             network_set_env(_env);
             chat_init();
@@ -365,7 +364,6 @@ namespace OpenRCT2
             input_reset_place_obj_modifier();
             viewport_init_all();
             game_init_all(150);
-
             _titleScreen = new TitleScreen();
             return true;
         }
@@ -656,7 +654,7 @@ namespace OpenRCT2
             uint32 currentUpdateTick = platform_get_ticks();
             gTicksSinceLastUpdate = std::min<uint32>(currentUpdateTick - _lastUpdateTick, 500);
             _lastUpdateTick = currentUpdateTick;
-            
+
             if (game_is_not_paused())
             {
                 gPaletteEffectFrame += gTicksSinceLastUpdate;

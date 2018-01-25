@@ -77,6 +77,8 @@ target_link_libraries(${PROJECT}
 	c
 	z
 	m
+    debugnet
+    # pthread
 	zip
 	SceAudio_stub
 	SceAudiodec_stub

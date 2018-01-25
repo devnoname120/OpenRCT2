@@ -648,6 +648,7 @@ private:
         _window = SDL_CreateWindow(OPENRCT2_NAME, x, y, width, height, flags);
         if (_window == nullptr)
         {
+            debugNetPrintf(1, "SDLException: SDL_CreateWindow(...)\n");
             SDLException::Throw("SDL_CreateWindow(...)");
         }
 
@@ -736,7 +737,6 @@ private:
                 sint32 areaB = b.Width * b.Height;
                 return areaA < areaB;
             });
-
         // Remove duplicates
         auto last = std::unique(resolutions.begin(), resolutions.end(),
             [](const Resolution &a, const Resolution &b) -> bool
@@ -746,12 +746,16 @@ private:
         resolutions.erase(last, resolutions.end());
 
         // Update config fullscreen resolution if not set
+#ifdef __vita__
+        gConfigGeneral.fullscreen_width = 960;
+        gConfigGeneral.fullscreen_height = 544;
+#else
         if (gConfigGeneral.fullscreen_width == -1 || gConfigGeneral.fullscreen_height == -1)
         {
             gConfigGeneral.fullscreen_width = resolutions.back().Width;
             gConfigGeneral.fullscreen_height = resolutions.back().Height;
         }
-
+#endif
         _fsResolutions = resolutions;
     }
 

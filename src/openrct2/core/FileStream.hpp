@@ -21,6 +21,10 @@
 #include "Math.hpp"
 #include "String.hpp"
 
+#if defined(__vita__)
+#include <psp2/kernel/threadmgr.h>
+#endif
+
 extern "C"
 {
     #include "../localisation/language.h"
@@ -54,6 +58,10 @@ public:
 
     FileStream(const utf8 * path, sint32 fileMode)
     {
+        debugNetPrintf(1, "FileStream [%s][%s]\n", path,
+            (fileMode == FILE_MODE_OPEN) ? "rb" :
+                (fileMode == FILE_MODE_WRITE) ? "w+b"
+                    : "a");
         const char * mode;
         switch (fileMode) {
         case FILE_MODE_OPEN:
@@ -82,16 +90,22 @@ public:
         free(pathW);
         free(modeW);
 #else
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
         _file = fopen(path, mode);
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
 #endif
         if (_file == nullptr)
         {
+            debugNetPrintf(1, "%s, %d [%s]\n", __FUNCTION__, __LINE__, path);
+            debugNetPrintf(1, "sceKernelGetThreadStackFreeSize(0): %d\n", sceKernelGetThreadStackFreeSize(0));
+            debugNetPrintf(1, "sceKernelGetThreadStackFreeSize(0x40010003): %d\n", sceKernelGetThreadStackFreeSize(0x40010003));
             throw IOException(String::StdFormat("Unable to open '%s'", path));
         }
-
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
         Seek(0, STREAM_SEEK_END);
         _fileSize = GetPosition();
         Seek(0, STREAM_SEEK_BEGIN);
+        debugNetPrintf(1, "%s, %d\n", __FUNCTION__, __LINE__);
 
         _ownsFilePtr = true;
     }

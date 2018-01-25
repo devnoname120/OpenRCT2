@@ -21,6 +21,107 @@ extern "C"
 
 #include "Console.hpp"
 
+#ifdef __vita__
+namespace Console
+{
+    void Write(char c)
+    {
+        debugNetPrintf(1, "%c", c);
+    }
+
+    void Write(const utf8 * str)
+    {
+        debugNetPrintf(1, "%s", stdout);
+    }
+
+    void WriteSpace(size_t count)
+    {
+        for (size_t i = 0; i < count; i++)
+        {
+            debugNetPrintf(1, "%c", ' ');
+        }
+    }
+
+    void WriteFormat(const utf8 * format, ...)
+    {
+        // let's home this doesn't go over
+        char buffer[1024];
+        va_list args;
+
+        va_start(args, format);
+        vsprintf(buffer, format, args);
+        va_end(args);
+
+        debugNetPrintf(1, "%s", buffer);
+    }
+
+    void WriteLine()
+    {
+        debugNetPrintf(1, "\n");
+    }
+
+    void WriteLine(const utf8 * format, ...)
+    {
+        char buffer[1024];
+        va_list args;
+
+        va_start(args, format);
+        vsprintf(buffer, format, args);
+        debugNetPrintf(1, "%s\n", buffer);
+        va_end(args);
+    }
+
+    namespace Error
+    {
+        void Write(char c)
+        {
+            debugNetPrintf(1, "%c", c);
+        }
+
+        void Write(const utf8 * str)
+        {
+            debugNetPrintf(1, "%s", stdout);
+        }
+
+        void WriteSpace(size_t count)
+        {
+            for (size_t i = 0; i < count; i++)
+            {
+                debugNetPrintf(1, "%c", ' ');
+            }
+        }
+
+        void WriteFormat(const utf8 * format, ...)
+        {
+            // let's home this doesn't go over
+            char buffer[1024];
+            va_list args;
+
+            va_start(args, format);
+            vsprintf(buffer, format, args);
+            va_end(args);
+
+            debugNetPrintf(1, "%s", buffer);
+        }
+
+        void WriteLine()
+        {
+            debugNetPrintf(1, "\n");
+        }
+
+        void WriteLine(const utf8 * format, ...)
+        {
+            char buffer[1024];
+            va_list args;
+
+            va_start(args, format);
+            vsprintf(buffer, format, args);
+            debugNetPrintf(1, "%s\n", buffer);
+            va_end(args);
+        }
+    }
+}
+#else
 namespace Console
 {
     void Write(char c)
@@ -106,3 +207,4 @@ namespace Console
         }
     }
 }
+#endif

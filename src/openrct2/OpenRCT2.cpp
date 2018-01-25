@@ -25,6 +25,14 @@ extern "C"
     #include "platform/platform.h"
 }
 
+uint32_t umask(uint32_t mask) {
+	return 0777;
+}
+
+int chmod(const char *pathname, uint32_t mode) {
+	return 0;
+}
+
 extern "C"
 {
     sint32 gExitCode;

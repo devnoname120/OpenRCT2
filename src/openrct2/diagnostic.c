@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <vitasdk.h>
 #include "diagnostic.h"
 
 #ifdef __ANDROID__
@@ -77,6 +78,47 @@ void diagnostic_log_with_location(DiagnosticLevel diagnosticLevel, const char *f
     va_end(args);
 }
 
+#elif defined(__vita__)
+int _vita_log_priority[DIAGNOSTIC_LEVEL_COUNT] = {2, 2, 1, 3, 1};
+void diagnostic_log(DiagnosticLevel diagnosticLevel, const char *format, ...)
+{
+    va_list args;
+
+    if (!_log_levels[diagnosticLevel])
+        return;
+
+    char msgbuf[0x800];
+    va_start(args, format);
+    sceClibVsnprintf(msgbuf, sizeof(msgbuf), format, args);
+    va_end(args);
+
+    debugNetPrintf(99, "%s: %s\n", _log_levels[diagnosticLevel], msgbuf);
+}
+
+void diagnostic_log_with_location(DiagnosticLevel diagnosticLevel, const char *file, const char *function, sint32 line, const char *format, ...)
+{
+    va_list args;
+
+    if (!_log_levels[diagnosticLevel])
+        return;
+
+    char msgbuf1[0x200];
+    char msgbuf2[0x800];
+
+    // Level and source code information
+    if (_log_location_enabled)
+        snprintf(msgbuf1, sizeof(msgbuf1), "%s[%s:%d (%s)]: ", _level_strings[diagnosticLevel], file, line, function);
+    else
+        snprintf(msgbuf1, sizeof(msgbuf1), "%s: ", _level_strings[diagnosticLevel]);
+
+    // Message
+    va_start(args, format);
+    sceClibVsnprintf(msgbuf2, sizeof(msgbuf2), format, args);
+    va_end(args);
+
+
+    debugNetPrintf(99, "%s%s\n", msgbuf1, msgbuf2);
+}
 #else
 
 void diagnostic_log(DiagnosticLevel diagnosticLevel, const char *format, ...)

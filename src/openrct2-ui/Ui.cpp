@@ -74,6 +74,10 @@ int NormalisedMain(int argc, char * * argv)
 int main(int argc, char * * argv)
 #endif
 {
+#if defined(__vita__)
+    debugNetInit(DEBUGNET_IP, 18194, 3);
+    debugNetUDPSend("== debugnet initialized ==\n");
+#endif
     core_init();
 #if !defined(__vita__)
     int runGame = cmdline_run((const char * *)argv, argc);

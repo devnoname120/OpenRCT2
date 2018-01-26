@@ -94,17 +94,9 @@ void diagnostic_log_with_location(DiagnosticLevel diagnosticLevel, const char *f
     #define diagnostic_log_macro(level, format, ...)    diagnostic_log_with_location(level, __FILE__, __func__, __LINE__, format, ## __VA_ARGS__)
 #endif // _MSC_VER
 
-#ifdef __vita__
-#define log_fatal(format, ...)      debugNetPrintf(1, format, ## __VA_ARGS__)
-#define log_error(format, ...)      debugNetPrintf(1, format, ## __VA_ARGS__)
-#define log_warning(format, ...)    debugNetPrintf(1, format, ## __VA_ARGS__)
-#define log_verbose(format, ...)    debugNetPrintf(1, format, ## __VA_ARGS__)
-#define log_info(format, ...)       debugNetPrintf(1, format, ## __VA_ARGS__)
-#else
 #define log_fatal(format, ...)      diagnostic_log_macro(DIAGNOSTIC_LEVEL_FATAL, format, ## __VA_ARGS__)
 #define log_error(format, ...)      diagnostic_log_macro(DIAGNOSTIC_LEVEL_ERROR, format, ## __VA_ARGS__)
 #define log_warning(format, ...)    diagnostic_log_macro(DIAGNOSTIC_LEVEL_WARNING, format, ## __VA_ARGS__)
 #define log_verbose(format, ...)    diagnostic_log(DIAGNOSTIC_LEVEL_VERBOSE, format, ## __VA_ARGS__)
 #define log_info(format, ...)       diagnostic_log_macro(DIAGNOSTIC_LEVEL_INFORMATION, format, ## __VA_ARGS__)
-#endif
 #endif

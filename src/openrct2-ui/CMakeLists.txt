@@ -90,6 +90,7 @@ target_link_libraries(${PROJECT}
 	SceSysmodule_stub
 	SceTouch_stub
 	SceNetCtl_stub
+	SceHid_stub
 )
 
 # Includes

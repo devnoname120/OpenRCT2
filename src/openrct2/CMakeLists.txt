@@ -92,6 +92,10 @@ if (APPLE)
     set_source_files_properties(${OPENRCT2_CORE_MM_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c -fmodules")
 endif ()
 
+if(VITA_BUILD)
+    set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/trace.cpp PROPERTIES COMPILE_FLAGS -fno-instrument-functions)
+endif()
+
 # Handle creating the rct2 text and data files on macOS and Linux
 # See details in src/openrct2/rct2/interop.c:rct2_interop_setup_segment for how the values
 # were derived.
